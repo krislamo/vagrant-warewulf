@@ -14,7 +14,7 @@ dnf install -y \
 # Build and install
 git clone https://github.com/warewulf/warewulf.git
 cd warewulf || exit 1
-git checkout v4.5.8
+git checkout v4.6.0
 make clean defaults \
     PREFIX=/usr \
     BINDIR=/usr/bin \
@@ -46,10 +46,11 @@ systemctl enable warewulfd
 systemctl start warewulfd
 
 # Configure image and compute nodes
-wwctl configure --all
+export PATH="$PATH:/usr/local/bin"
+wwctl configure --all --verbose --debug
 wwctl container import docker://ghcr.io/warewulf/warewulf-rockylinux:9 rocky9
 wwctl container build rocky9
-wwctl profile set --yes --container rocky9 "default"
-wwctl profile set --yes --netdev eth1 --netmask 255.255.255.0 --gateway 192.168.200.254 "default"
+wwctl profile set --yes --image rocky9 "default"
+wwctl profile set --yes --netdev eth1 --netmask 255.255.255.0 --gateway 192.168.200.254 "defaultd"
 wwctl node add node1.cluster -I 192.168.200.101 --discoverable
 wwctl node add node2.cluster -I 192.168.200.102 --discoverable
