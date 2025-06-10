@@ -28,9 +28,21 @@ Vagrant.configure("2") do |config|
         controller.vm.provider :libvirt do |libvirt|
             libvirt.cpus = 2
             libvirt.memory = 4096
-            # Doesn't boot without this
-            libvirt.machine_virtual_size = 10
+            libvirt.machine_virtual_size = 100
         end
+
+        # Expand XFS rootfs
+        config.vm.provision "shell", inline: <<-SHELL
+            set -xe
+            df -h /
+            dnf install -y cloud-utils-growpart
+            PART="$(findmnt -n -o SOURCE /)"
+            DISK="$(lsblk -n -o PKNAME "$PART")"
+            NUM="$(lsblk -n -o KNAME "$PART" | sed 's/.*[^0-9]//')"
+            growpart "/dev/$DISK" "$NUM" && \
+            xfs_growfs /
+            df -h /
+        SHELL
 
         controller.vm.provision "shell", path: "provision.sh"
     end
